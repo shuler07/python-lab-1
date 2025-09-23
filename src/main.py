@@ -1,13 +1,13 @@
-from src.customerrors import MathExpressionError
+from customerrors import MathExpressionError
 
 
 class SolverM1:
     """
-    Класс для решения математический выражений. Для вычисления значения:
-    1. Создайте объект класса.
-    2. Передайте выражение в метод expr().
-    3. Если выражение корректно, метод expr() вернет вычисленное значение.
-    Поддерживаются знаки: <0-9, +, -, ~, *, **, /, //, %, (, )>
+    Класс для решения математический выражений. Для вычисления значения:\n
+    1. Создайте объект класса.\n
+    2. Передайте выражение в метод expr().\n
+    3. Если выражение корректно, метод expr() вернет вычисленное значение.\n
+    Поддерживаются знаки: < 0-9 . ~ $ + - * ** / // % ( ) >
     """
 
     def __init__(self) -> None:
@@ -32,11 +32,11 @@ class SolverM1:
 
             if char.isspace():
                 pass
-            elif char.isdigit() or char == "~":
+            elif char.isdigit() or char in "~$":
                 if last_key in ["operator", "lbracket"]:
                     i += 1
                     was_point = False
-                    if char == "~" and i < len(expr) and expr[i] == "(":
+                    if char in "~$" and i < len(expr) and expr[i] == "(":
                         brackets_opened += 1
                         last_key = "lbracket"
                     else:
@@ -146,21 +146,26 @@ class SolverM1:
 
         return brackets_opened == 0 and last_key != "operator"
 
-    def is_expr_has_edge_brackets(self, expr: str) -> tuple[bool, bool]:
+    def is_expr_has_edge_brackets_and_sign(self, expr: str) -> tuple[bool, str]:
         """
-        Проверка на наличие крайних скобок выражения (с учетом возможного унарного минуса перед ними).\n
-        Возвращает кортеж, где первый элемент - наличие крайних скобок, второй - наличие унарного минуса перед ними. Например:\n
-        (2 + 3 * 2) -> True, False\n
-        ~(2 + 3 * 2) -> True, True\n
-        (2 + 3) * 2 -> False, False
-        """
-        isReverse: bool = expr[:2] == "~(" and expr[-1] == ")"
-        if isReverse:
+        Проверка на наличие крайних скобок выражения (с учетом возможного унарного минуса / плюса перед ними).\n
+        Возвращает кортеж, где первый элемент - наличие крайних скобок, второй - символ перед ними. Например:\n~~~
+        (2 + 3 * 2) -> True, ''\n
+        ~(2 + 3 * 2) -> True, '~'\n
+        (2 + 3) * 2 -> False, ''\n
+        $(2 + 3 * 2) -> True, '$'
+        ~~~"""
+        sign = ""
+        if expr[:2] == "~(" and expr[-1] == ")":
+            sign = "~"
+            expr = expr[2:-1]
+        elif expr[:2] == "$(" and expr[-1] == ")":
+            sign = "$"
             expr = expr[2:-1]
         elif expr[0] == "(" and expr[-1] == ")":
             expr = expr[1:-1]
         else:
-            return (False, False)
+            return (False, "")
 
         brackets_count = 1
         for char in expr:
@@ -169,9 +174,9 @@ class SolverM1:
             elif char == ")":
                 brackets_count -= 1
             if brackets_count == 0:
-                return (False, False)
+                return (False, "")
 
-        return (True, isReverse)
+        return (True, sign)
 
     def add(self, expr: str) -> float:
         """
@@ -179,9 +184,9 @@ class SolverM1:
         2. Выполнение всех операций сложения / вычитания в выражении\n
         3. Переход к mul()
         """
-        hasEdgeBrackets, isReverse = self.is_expr_has_edge_brackets(expr)
+        hasEdgeBrackets, sign = self.is_expr_has_edge_brackets_and_sign(expr)
         if hasEdgeBrackets:
-            if isReverse:
+            if sign != "":
                 expr = expr[2:-1]
             else:
                 expr = expr[1:-1]
@@ -219,7 +224,7 @@ class SolverM1:
 
         # print("Add -> Mul", values[0])
 
-        return -self.mul(values[0]) if isReverse else self.mul(values[0])
+        return -self.mul(values[0]) if sign == "~" else self.mul(values[0])
 
     def mul(self, expr: str) -> float:
         """
@@ -227,7 +232,7 @@ class SolverM1:
         2. Выполнение всех операций умножения / деления в выражении\n
         3. Переход к pow()
         """
-        if self.is_expr_has_edge_brackets(expr)[0]:
+        if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
         brackets_opened = 0
@@ -304,7 +309,7 @@ class SolverM1:
         2. Выполнение всех операций возведения в степень в выражении\n
         3. Переход к unary()
         """
-        if self.is_expr_has_edge_brackets(expr)[0]:
+        if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
         brackets_opened = 0
@@ -316,9 +321,8 @@ class SolverM1:
             char = expr[i]
             if char == "*" and expr[i] == "*" and brackets_opened == 0:
                 lnum = expr[start:i]
-                if (
-                    lnum[0] == "~"
-                ):  # Если перед первым числом унарный минус, он идет в ответ (~2**2 == ~4)
+                # Если перед первым числом унарный минус, он идет в ответ (~2**2 == ~4)
+                if lnum[0] == "~":
                     values.append(lnum[1:])
                     isReverse = True
                 else:
@@ -352,7 +356,7 @@ class SolverM1:
         2. Проверка на финальность числа\n
         3. Переход к primary() или определение знака числа
         """
-        if self.is_expr_has_edge_brackets(expr)[0]:
+        if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
         if self.rec_count == 1:
@@ -368,6 +372,7 @@ class SolverM1:
             if expr[0] == "~":
                 return -float(expr[1:]) if "." in expr else -int(expr[1:])
             else:
+                expr = expr.replace("$", "")
                 return float(expr) if "." in expr else int(expr)
 
     def primary(self, expr: str) -> float:
@@ -381,13 +386,13 @@ class SolverM1:
 
 
 def main() -> None:
-    "Создается объект класса SolverM1, при помощи которого вычисляются значения математических выражений"
+    "Создание объекта класса SolverM1, при помощи которого вычисляются значения математических выражений"
     solver = SolverM1()
 
     while True:
         expression = input("Введите выражение: ")
         answer = solver.expr(expression)
-        print(answer)
+        print("Ответ:", answer, "\n")
 
 
 if __name__ == "__main__":
