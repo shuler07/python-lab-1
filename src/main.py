@@ -19,7 +19,7 @@ class SolverM1:
             self.rec_count = 1
             return self.add(expression.replace(" ", ""))
         else:
-            raise MathExpressionError("Superspicious brackets", "")
+            raise MathExpressionError("Extra brackets", expression)
 
     def is_expr_valid(self, expr: str) -> bool:
         "Проверка правильности выражения"
