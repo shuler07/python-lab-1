@@ -1,4 +1,4 @@
-from customerrors import MathExpressionError
+from src.customerrors import MathExpressionError
 
 
 class SolverM1:
@@ -208,7 +208,7 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        # print("Add found:", values, operators)
+        print("Add found:", values, operators)
 
         while len(values) != 1:
             self.rec_count += 2
@@ -219,7 +219,7 @@ class SolverM1:
                 case "-":
                     values[0] = str(x - y).replace("-", "~")
 
-        # print("Add -> Mul", values[0])
+        print("Add -> Mul", values[0])
 
         return -self.mul(values[0]) if sign == "~" else self.mul(values[0])
 
@@ -264,7 +264,7 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        # print("Mul found:", values, operators)
+        print("Mul found:", values, operators)
 
         while len(values) != 1:
             self.rec_count += 2
@@ -291,7 +291,7 @@ class SolverM1:
                             f"{x} {type(x)}, {y} {type(y)}",
                         )
 
-        # print("Mul -> Pow", values[0])
+        print("Mul -> Pow", values[0])
 
         return self.pow(values[0])
 
@@ -306,19 +306,12 @@ class SolverM1:
 
         brackets_opened = 0
         values = []
-        isReverse = False
 
         i = start = 0
         while i < len(expr):
             char = expr[i]
             if char == "*" and expr[i] == "*" and brackets_opened == 0:
-                lnum = expr[start:i]
-                # Если перед первым числом унарный минус, он идет в ответ (~2**2 == ~4)
-                if lnum[0] == "~":
-                    values.append(lnum[1:])
-                    isReverse = True
-                else:
-                    values.append(lnum)
+                values.append(expr[start:i])
                 start = i + 2
                 i += 1
             elif char == "(":
@@ -328,16 +321,17 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        # print("Pow found:", values)
+        print("Pow found:", values)
 
         while len(values) != 1:
             self.rec_count += 2
+            isReverse = values[-2][0] == '~'
             x, y = self.unary(values.pop(-2)), self.unary(values.pop())
-            values.append(str(x**y).replace("-", "~"))
+            values.append(f'~{x ** y}' if isReverse else str(x ** y))
 
-        # print("Pow -> Unary", values[0])
+        print("Pow -> Unary", values[0])
 
-        return -self.unary(values[0]) if isReverse else self.unary(values[0])
+        return self.unary(values[0])
 
     def unary(self, expr: str) -> float:
         """
