@@ -1,4 +1,4 @@
-from src.customerrors import MathExpressionError
+from customerrors import MathExpressionError
 
 
 class SolverM1:
@@ -10,19 +10,24 @@ class SolverM1:
     Поддерживаются знаки: < 0-9 . ~ $ + - * ** / // % ( ) >
     """
 
-    def __init__(self) -> None:
+    def __init__(self, debug: bool = False) -> None:
         self.rec_count = 0
+        self.debug = debug
 
     def expr(self, expression: str) -> float:
         "Вычисление значения математического выражения"
+
         if self.is_expr_valid(expression):
             self.rec_count = 1
-            return self.add(expression.replace(" ", ""))
+            expression = expression.replace(" ", "")
+
+            return self.add(expression)
         else:
             raise MathExpressionError("Extra brackets", expression)
 
     def is_expr_valid(self, expr: str) -> bool:
         "Проверка правильности выражения"
+
         last_key = "operator"
         brackets_opened = 0
 
@@ -155,6 +160,7 @@ class SolverM1:
         (2 + 3) * 2 -> False, ''\n
         $(2 + 3 * 2) -> True, '$'
         ~~~"""
+
         sign = ""
         if expr[:2] == "~(" and expr[-1] == ")":
             sign = "~"
@@ -184,6 +190,7 @@ class SolverM1:
         2. Выполнение всех операций сложения / вычитания в выражении\n
         3. Переход к mul()
         """
+
         hasEdgeBrackets, sign = self.is_expr_has_edge_brackets_and_sign(expr)
         if hasEdgeBrackets:
             if sign != "":
@@ -208,20 +215,26 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        print("Add found:", values, operators)
+
+        if self.debug:
+            print("Add found:", values, operators)
 
         while len(values) != 1:
             self.rec_count += 2
             x, y = self.mul(values[0]), self.mul(values.pop(1))
             match operators.pop(0):
                 case "+":
-                    values[0] = str(x + y).replace("-", "~")
+                    values[0] = f'{x + y}'.replace("-", "~")
                 case "-":
-                    values[0] = str(x - y).replace("-", "~")
+                    values[0] = f'{x - y}'.replace("-", "~")
 
-        print("Add -> Mul", values[0])
+        if self.debug:
+            print("Add -> Mul", values[0])
 
-        return -self.mul(values[0]) if sign == "~" else self.mul(values[0])
+        if sign == "~":
+            return -self.mul(values[0])
+        else:
+            return self.mul(values[0])
 
     def mul(self, expr: str) -> float:
         """
@@ -229,6 +242,7 @@ class SolverM1:
         2. Выполнение всех операций умножения / деления в выражении\n
         3. Переход к pow()
         """
+
         if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
@@ -264,7 +278,9 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        print("Mul found:", values, operators)
+
+        if self.debug:
+            print("Mul found:", values, operators)
 
         while len(values) != 1:
             self.rec_count += 2
@@ -272,26 +288,27 @@ class SolverM1:
             match (operators.pop(0)):
                 case "//":
                     if isinstance(x, int) and isinstance(y, int):
-                        values[0] = str(x // y).replace("-", "~")
+                        values[0] = f'{x // y}'.replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '//' allowed only between integers",
                             f"{x} {type(x)}, {y} {type(y)}",
                         )
-                case "/":
-                    values[0] = str(x / y).replace("-", "~")
-                case "*":
-                    values[0] = str(x * y).replace("-", "~")
                 case "%":
                     if isinstance(x, int) and isinstance(y, int):
-                        values[0] = str(x % y).replace("-", "~")
+                        values[0] = f'{x % y}'.replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '%' allowed only between integers",
                             f"{x} {type(x)}, {y} {type(y)}",
                         )
+                case "/":
+                    values[0] = f'{x / y}'.replace("-", "~")
+                case "*":
+                    values[0] = f'{x * y}'.replace("-", "~")
 
-        print("Mul -> Pow", values[0])
+        if self.debug:
+            print("Mul -> Pow", values[0])
 
         return self.pow(values[0])
 
@@ -321,15 +338,27 @@ class SolverM1:
             i += 1
 
         values.append(expr[start:])
-        print("Pow found:", values)
+        if self.debug:
+            print("Pow found:", values)
 
         while len(values) != 1:
             self.rec_count += 2
-            isReverse = values[-2][0] == '~'
-            x, y = self.unary(values.pop(-2)), self.unary(values.pop())
-            values.append(f'~{x ** y}' if isReverse else str(x ** y))
+            isReverseWithBracket = values[-2][:2] == "~("
+            isReverseWoBracket = values[-2][0] == "~"
 
-        print("Pow -> Unary", values[0])
+            y = self.unary(values.pop())
+            if isReverseWithBracket:
+                x = self.add(values.pop()[2:-1])
+                values.append(f"~{x ** y}")
+            elif isReverseWoBracket:
+                x = self.unary(values.pop()[1:])
+                values.append(f"~{x ** y}")
+            else:
+                x = self.unary(values.pop())
+                values.append(f"{x ** y}")
+
+        if self.debug:
+            print("Pow -> Unary", values[0])
 
         return self.unary(values[0])
 
@@ -372,10 +401,14 @@ def main() -> None:
     "Создание объекта класса SolverM1, при помощи которого вычисляются значения математических выражений"
     solver = SolverM1()
 
+    count = 1
     while True:
-        expression = input("Введите выражение: ")
+        expression = input(f"{count}. Введите выражение: ")
+
         answer = solver.expr(expression)
         print("Ответ:", answer, "\n")
+
+        count += 1
 
 
 if __name__ == "__main__":

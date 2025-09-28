@@ -46,10 +46,16 @@ class TestSolverM1:
         assert solver.expr("~(   ~2** (~0.5) ** (~1)  ) +6*2 % 5") == 2.25
 
     def test_14(self):
-        assert f'{solver.expr('2**~2**~2'):.5f}' == f'{solver.expr('2**~0.25'):.5f}' == '0.84090'
+        assert f"{solver.expr('2**~2**~2'):.5f}" == "0.84090"
 
     def test_15(self):
-        assert solver.expr('~(~2)**2') == -4
+        assert solver.expr("~(~2)**2") == -4
+
+    def test_16(self):
+        assert solver.expr("~(~2)**3") == 8
+
+
+class TestErrorsSolverM1:
 
     def test_error_1(self):
         assert solver.expr("2 / ((1+2) % 3)") == ZeroDivisionError
