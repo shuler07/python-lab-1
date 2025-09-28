@@ -212,15 +212,12 @@ class SolverM1:
 
         while len(values) != 1:
             self.rec_count += 2
-            match (operators.pop(0)):
+            x, y = self.mul(values[0]), self.mul(values.pop(1))
+            match operators.pop(0):
                 case "+":
-                    values[0] = str(
-                        self.mul(values[0]) + self.mul(values.pop(1))
-                    ).replace("-", "~")
+                    values[0] = str(x + y).replace("-", "~")
                 case "-":
-                    values[0] = str(
-                        self.mul(values[0]) - self.mul(values.pop(1))
-                    ).replace("-", "~")
+                    values[0] = str(x - y).replace("-", "~")
 
         # print("Add -> Mul", values[0])
 
@@ -271,32 +268,27 @@ class SolverM1:
 
         while len(values) != 1:
             self.rec_count += 2
+            x, y = self.pow(values[0]), self.pow(values.pop(1))
             match (operators.pop(0)):
                 case "//":
-                    num1, num2 = self.pow(values[0]), self.pow(values.pop(1))
-                    if isinstance(num1, int) and isinstance(num2, int):
-                        values[0] = str(num1 // num2).replace("-", "~")
+                    if isinstance(x, int) and isinstance(y, int):
+                        values[0] = str(x // y).replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '//' allowed only between integers",
-                            f"{num1} {type(num1)}, {num2} {type(num2)}",
+                            f"{x} {type(x)}, {y} {type(y)}",
                         )
                 case "/":
-                    values[0] = str(
-                        self.pow(values[0]) / self.pow(values.pop(1))
-                    ).replace("-", "~")
+                    values[0] = str(x / y).replace("-", "~")
                 case "*":
-                    values[0] = str(
-                        self.pow(values[0]) * self.pow(values.pop(1))
-                    ).replace("-", "~")
+                    values[0] = str(x * y).replace("-", "~")
                 case "%":
-                    num1, num2 = self.pow(values[0]), self.pow(values.pop(1))
-                    if isinstance(num1, int) and isinstance(num2, int):
-                        values[0] = str(num1 % num2).replace("-", "~")
+                    if isinstance(x, int) and isinstance(y, int):
+                        values[0] = str(x % y).replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '%' allowed only between integers",
-                            f"{num1} {type(num1)}, {num2} {type(num2)}",
+                            f"{x} {type(x)}, {y} {type(y)}",
                         )
 
         # print("Mul -> Pow", values[0])
@@ -340,11 +332,8 @@ class SolverM1:
 
         while len(values) != 1:
             self.rec_count += 2
-            values.append(
-                str(self.unary(values.pop(-2)) ** self.unary(values.pop())).replace(
-                    "-", "~"
-                )
-            )
+            x, y = self.unary(values.pop(-2)), self.unary(values.pop())
+            values.append(str(x**y).replace("-", "~"))
 
         # print("Pow -> Unary", values[0])
 
