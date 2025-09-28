@@ -224,9 +224,9 @@ class SolverM1:
             x, y = self.mul(values[0]), self.mul(values.pop(1))
             match operators.pop(0):
                 case "+":
-                    values[0] = f'{x + y}'.replace("-", "~")
+                    values[0] = f"{x + y}".replace("-", "~")
                 case "-":
-                    values[0] = f'{x - y}'.replace("-", "~")
+                    values[0] = f"{x - y}".replace("-", "~")
 
         if self.debug:
             print("Add -> Mul", values[0])
@@ -288,7 +288,7 @@ class SolverM1:
             match (operators.pop(0)):
                 case "//":
                     if isinstance(x, int) and isinstance(y, int):
-                        values[0] = f'{x // y}'.replace("-", "~")
+                        values[0] = f"{x // y}".replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '//' allowed only between integers",
@@ -296,16 +296,16 @@ class SolverM1:
                         )
                 case "%":
                     if isinstance(x, int) and isinstance(y, int):
-                        values[0] = f'{x % y}'.replace("-", "~")
+                        values[0] = f"{x % y}".replace("-", "~")
                     else:
                         raise MathExpressionError(
                             "Operator '%' allowed only between integers",
                             f"{x} {type(x)}, {y} {type(y)}",
                         )
                 case "/":
-                    values[0] = f'{x / y}'.replace("-", "~")
+                    values[0] = f"{x / y}".replace("-", "~")
                 case "*":
-                    values[0] = f'{x * y}'.replace("-", "~")
+                    values[0] = f"{x * y}".replace("-", "~")
 
         if self.debug:
             print("Mul -> Pow", values[0])
@@ -390,7 +390,7 @@ class SolverM1:
     def primary(self, expr: str) -> float:
         "Определение знака финального числа и возврат значения"
         minuses_count = expr.count("~")
-        expr = expr.replace("~", "")
+        expr = expr.replace("~", "").replace("$", "")
         if minuses_count % 2 == 0:
             return float(expr) if "." in expr else int(expr)
         else:
