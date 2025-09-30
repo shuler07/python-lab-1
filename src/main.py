@@ -1,4 +1,4 @@
-from customerrors import MathExpressionError
+from src.customerrors import MathExpressionError
 
 
 class SolverM1:
@@ -187,8 +187,9 @@ class SolverM1:
     def add(self, expr: str) -> float:
         """
         1. Проверка на наличие крайних скобок выражения\n
-        2. Выполнение всех операций сложения / вычитания в выражении\n
-        3. Переход к mul()
+        2. Разбиение выражения знаками +, - на подвыражения\n
+        3. Для каждого подвыражения вычисляется mul()\n
+        4. Выполнение всех операций сложения и вычитания между вычисленными подвыражениями
         """
 
         hasEdgeBrackets, sign = self.is_expr_has_edge_brackets_and_sign(expr)
@@ -239,8 +240,9 @@ class SolverM1:
     def mul(self, expr: str) -> float:
         """
         1. Проверка на наличие крайних скобок выражения\n
-        2. Выполнение всех операций умножения / деления в выражении\n
-        3. Переход к pow()
+        2. Разбиение выражения знаками *, /, //, % на подвыражения\n
+        3. Для каждого подвыражения вычисляется pow()\n
+        4. Выполнение всех операций умножения и деления  между вычисленными подвыражениями
         """
 
         if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
@@ -315,9 +317,11 @@ class SolverM1:
     def pow(self, expr: str) -> float:
         """
         1. Проверка на наличие крайних скобок выражения\n
-        2. Выполнение всех операций возведения в степень в выражении\n
-        3. Переход к unary()
+        2. Разбиение выражения знаком ** на подвыражения\n
+        3. Для каждого подвыражения вычисляется unary()\n
+        4. Выполнение всех операций возведения в степень между вычисленными подвыражениями (справа налево)
         """
+
         if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
@@ -365,9 +369,11 @@ class SolverM1:
     def unary(self, expr: str) -> float:
         """
         1. Проверка на наличие крайних скобок выражения\n
-        2. Проверка на финальность числа\n
-        3. Переход к primary() или определение знака числа
+        2. Проверка количества рекурсий\n
+        3.1. Если 1 рекурсия - вычисление primary() от выражения\n
+        3.2. Если более 1 рекурсии - возвращение числа с его знаком
         """
+
         if self.is_expr_has_edge_brackets_and_sign(expr)[0]:
             return self.add(expr)
 
@@ -388,10 +394,10 @@ class SolverM1:
                 return float(expr) if "." in expr else int(expr)
 
     def primary(self, expr: str) -> float:
-        "Определение знака финального числа и возврат значения"
-        minuses_count = expr.count("~")
+        "Возвращение итогового числа с его знаком"
+        isReverse = expr[0] == '~'
         expr = expr.replace("~", "").replace("$", "")
-        if minuses_count % 2 == 0:
+        if not isReverse:
             return float(expr) if "." in expr else int(expr)
         else:
             return -float(expr) if "." in expr else -int(expr)
