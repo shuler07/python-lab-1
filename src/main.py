@@ -1,4 +1,4 @@
-from src.customerrors import MathExpressionError
+from customerrors import MathExpressionError
 
 
 class SolverM1:
