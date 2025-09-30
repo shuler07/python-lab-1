@@ -1,3 +1,4 @@
+from pytest import raises
 from src.main import SolverM1
 from src.customerrors import MathExpressionError
 
@@ -57,11 +58,16 @@ class TestSolverM1:
 
 class TestErrorsSolverM1:
 
+    def assertError(self, exception, expr) -> bool:
+        with raises(exception) as exc:
+            solver.expr(expr)
+        return exc.errisinstance(exception)
+
     def test_error_1(self):
-        assert solver.expr("2 / ((1+2) % 3)") == ZeroDivisionError
+        assert self.assertError(ZeroDivisionError, "2 / ((1+2) % 3)")
 
     def test_error_2(self):
-        assert solver.expr("3/2 // 1") == MathExpressionError
+        assert self.assertError(MathExpressionError, "3/2 // 1")
 
     def test_error_3(self):
-        assert solver.expr("2 / 3 // 2") == MathExpressionError
+        assert self.assertError(MathExpressionError, "2 / 3 // 2")
