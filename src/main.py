@@ -31,6 +31,9 @@ class SolverM1:
         last_key = "operator"
         brackets_opened = 0
 
+        if len(expr) == 0:
+            raise ValueError("Empty expression")
+
         i = 0
         while i < len(expr):
             char = expr[i]
@@ -395,7 +398,7 @@ class SolverM1:
 
     def primary(self, expr: str) -> float:
         "Возвращение итогового числа с его знаком"
-        isReverse = expr[0] == '~'
+        isReverse = expr[0] == "~"
         expr = expr.replace("~", "").replace("$", "")
         if not isReverse:
             return float(expr) if "." in expr else int(expr)

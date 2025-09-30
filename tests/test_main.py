@@ -71,3 +71,6 @@ class TestErrorsSolverM1:
 
     def test_error_3(self):
         assert self.assertError(MathExpressionError, "2 / 3 // 2")
+
+    def test_error_4(self):
+        assert self.assertError(ValueError, "")
